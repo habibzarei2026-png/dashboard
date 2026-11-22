@@ -1,0 +1,1693 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سامانه جامع هوش تجاری و رصد راهبردی صنعت پتروشیمی | وزارت نفت</title>
+    <!-- فونت وزیرمتن برای تایپوگرافی استاندارد و مدرن فارسی -->
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
+    <!-- کتابخانه Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- کتابخانه Three.js برای رندر نمودارهای سه‌بعدی و ایزومتریک واقعی -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- آیکون‌های Lucide -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Vazirmatn', 'sans-serif'],
+                    },
+                    colors: {
+                        petro: {
+                            bg: '#162024',       // پس‌زمینه اصلی منطبق با تم‌پلیت ارسالی
+                            card: '#1e2b30',     // پس‌زمینه کارت‌ها
+                            border: '#2d3f47',   // حاشیه‌های ظریف
+                            pink: '#ff2a70',     // صورتی نئون تم‌پلیت
+                            purple: '#9c27b0',   // بنفش تم‌پلیت
+                            amber: '#ffab00',    // کهربایی تم‌پلیت
+                            blue: '#3d5afe',     // آبی کبالت تم‌پلیت
+                            cyan: '#00e5ff'      // فیروزه‌ای تکمیلی
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #162024;
+            color: #e2e8f0;
+            font-family: 'Vazirmatn', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* اسکرول‌بار سفارشی شیک */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #162024;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2d3f47;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ff2a70;
+        }
+
+        /* افکت شیشه‌ای و عمق کارت‌های مدیریتی */
+        .glass-panel {
+            background: linear-gradient(145deg, rgba(30, 43, 48, 0.92), rgba(22, 32, 36, 0.96));
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(12px);
+        }
+
+        /* استایل بوم‌های سه‌بعدی */
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            cursor: grab;
+        }
+        .canvas-container:active {
+            cursor: grabbing;
+        }
+
+        /* انیمیشن پالس هشدارها */
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 10px rgba(255, 42, 112, 0.2); }
+            50% { box-shadow: 0 0 22px rgba(255, 42, 112, 0.6); }
+        }
+        .alert-glow-red {
+            animation: pulse-glow 2.5s infinite;
+        }
+
+        /* برچسب‌های وضعیت داده */
+        .badge-official { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3); }
+        .badge-estimate { background: rgba(255, 171, 0, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3); }
+        .badge-sample { background: rgba(156, 39, 176, 0.2); color: #e879f9; border: 1px solid rgba(232, 121, 249, 0.3); }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- نوار بالایی (هدر در تراز وزارت نفت) -->
+    <header class="glass-panel sticky top-0 z-40 border-b border-petro-border px-4 lg:px-8 py-3">
+        <div class="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-4">
+            <!-- هویت بصری و عنوان -->
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-petro-pink via-petro-purple to-petro-blue p-[2px] shadow-lg">
+                    <div class="w-full h-full bg-petro-bg rounded-[10px] flex items-center justify-center">
+                        <!-- لوگوی برداری اختصاصی پتروشیمی -->
+                        <svg class="w-7 h-7 text-petro-pink" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                        </svg>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold tracking-wider text-petro-amber uppercase">جمهوری اسلامی ایران • وزارت نفت</span>
+                        <span class="px-2 py-0.5 text-[10px] rounded-full bg-petro-pink/20 text-petro-pink border border-petro-pink/30">اتاق وضعیت راهبردی</span>
+                    </div>
+                    <h1 class="text-lg md:text-xl font-extrabold text-white mt-0.5">داشبورد جامع پایش و برنامه‌ریزی صنعت پتروشیمی</h1>
+                </div>
+            </div>
+
+            <!-- ابزارهای کنترلی، دکمه‌های سفارشی و وضعیت ویرایش -->
+            <div class="flex flex-wrap items-center gap-2.5">
+                <!-- کانتینر دکمه‌های سفارشی افزوده‌شده توسط کاربر -->
+                <div id="custom-buttons-container" class="flex flex-wrap items-center gap-2"></div>
+
+                <!-- دکمه افزودن دکمه جدید -->
+                <button onclick="openAddButtonModal()" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-petro-card hover:bg-petro-border text-xs font-medium text-slate-200 border border-petro-border transition-all shadow-sm">
+                    <i data-lucide="plus-square" class="w-4 h-4 text-petro-cyan"></i>
+                    <span>افزودن دکمه</span>
+                </button>
+
+                <!-- دکمه افزودن تب جدید -->
+                <button onclick="openAddTabModal()" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-petro-card hover:bg-petro-border text-xs font-medium text-slate-200 border border-petro-border transition-all shadow-sm">
+                    <i data-lucide="folder-plus" class="w-4 h-4 text-petro-amber"></i>
+                    <span>افزودن تب</span>
+                </button>
+
+                <!-- کلید حالت ویرایش (Edit Mode) -->
+                <button id="toggle-edit-btn" onclick="toggleEditMode()" class="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-petro-pink to-petro-purple hover:opacity-90 text-xs font-bold text-white shadow-lg shadow-petro-pink/25 transition-all">
+                    <i data-lucide="edit-3" class="w-4 h-4"></i>
+                    <span id="edit-btn-text">حالت ویرایش داده‌ها</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- نوار تب‌های ناوبری -->
+        <div class="max-w-[1600px] mx-auto mt-4 pt-3 border-t border-white/5 flex items-center justify-between gap-4 overflow-x-auto">
+            <nav id="tabs-nav" class="flex items-center gap-2 min-w-max">
+                <!-- تب‌ها به صورت داینامیک رندر می‌شوند -->
+            </nav>
+            <div class="text-xs text-slate-400 hidden xl:flex items-center gap-2 shrink-0">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                <span>به‌روزرسانی: آذر ۱۴۰۵ (نوامبر ۲۰۲۶)</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- راهنمای وضعیت ویرایش (فقط در زمان فعال بودن ویرایش نمایش داده می‌شود) -->
+    <div id="edit-banner" class="hidden bg-gradient-to-r from-petro-amber/20 via-petro-pink/20 to-petro-purple/20 border-b border-petro-amber/40 px-4 py-2.5 text-center text-xs text-amber-200">
+        <div class="max-w-[1600px] mx-auto flex flex-wrap items-center justify-center gap-4">
+            <span class="font-bold flex items-center gap-1.5">
+                <i data-lucide="sparkles" class="w-4 h-4 text-petro-amber"></i>
+                حالت ویرایش زنده فعال است:
+            </span>
+            <span>روی هر عدد در کارت‌ها یا جداول کلیک کنید تا تغییر دهید. نمودارهای سه‌بعدی به صورت آنی بروزرسانی می‌شوند.</span>
+            <button onclick="resetAllData()" class="px-2.5 py-1 rounded-lg bg-red-500/20 hover:bg-red-500/40 text-red-200 border border-red-400/30 transition">
+                بازنشانی به داده‌های گزارش اصلی
+            </button>
+        </div>
+    </div>
+
+    <!-- محتوای اصلی داشبورد -->
+    <main id="dashboard-content" class="flex-1 max-w-[1600px] w-full mx-auto px-4 lg:px-8 py-6 space-y-6">
+        <!-- محتوای تب فعال در این بخش رندر می‌شود -->
+    </main>
+
+    <!-- فوتر اطلاعاتی -->
+    <footer class="border-t border-petro-border bg-petro-card/50 py-4 px-4 lg:px-8 mt-12">
+        <div class="max-w-[1600px] mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-400">
+            <div class="flex flex-wrap items-center gap-3">
+                <span class="font-semibold text-slate-300">راهنمای برچسب‌ها:</span>
+                <span class="px-2 py-0.5 rounded-md badge-official">رسمی: شرکت ملی صنایع پتروشیمی / گمرک</span>
+                <span class="px-2 py-0.5 rounded-md badge-estimate">برآورد: درون‌یابی نیازمند راستی‌آزمایی</span>
+                <span class="px-2 py-0.5 rounded-md badge-sample">نمونه: مقدار پیش‌فرض قابل جایگزینی</span>
+            </div>
+            <div>
+                منابع: شرکت ملی صنایع پتروشیمی، گمرک ایران، گزارش‌های پایش انرژی (آذر ۱۴۰۵)
+            </div>
+        </div>
+    </footer>
+
+    <!-- مودال افزودن تب جدید -->
+    <div id="add-tab-modal" class="fixed inset-0 z-50 hidden bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="glass-panel rounded-2xl max-w-md w-full p-6 border border-petro-border space-y-4">
+            <div class="flex items-center justify-between border-b border-white/10 pb-3">
+                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                    <i data-lucide="folder-plus" class="w-5 h-5 text-petro-amber"></i>
+                    ایجاد تب مدیریتی جدید
+                </h3>
+                <button onclick="closeModal('add-tab-modal')" class="text-slate-400 hover:text-white">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs text-slate-300 mb-1">عنوان تب جدید</label>
+                    <input id="new-tab-title" type="text" placeholder="مثلاً: پایش مجتمع‌های عسلویه" class="w-full px-3 py-2 rounded-xl bg-petro-bg border border-petro-border text-sm text-white focus:outline-none focus:border-petro-pink">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-300 mb-1">نوع محتوای پیش‌فرض تب</label>
+                    <select id="new-tab-type" class="w-full px-3 py-2 rounded-xl bg-petro-bg border border-petro-border text-sm text-white focus:outline-none focus:border-petro-pink">
+                        <option value="custom-chart">نمودار سه‌بعدی سفارشی + جدول شاخص‌ها</option>
+                        <option value="notes">یادداشت و گزارش مدیریتی قابل ویرایش</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeModal('add-tab-modal')" class="px-4 py-2 rounded-xl bg-petro-card text-xs text-slate-300 hover:bg-petro-border">انصراف</button>
+                <button onclick="createNewTab()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-petro-amber to-petro-pink text-xs font-bold text-white shadow-md">ساخت تب</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- مودال افزودن دکمه جدید -->
+    <div id="add-button-modal" class="fixed inset-0 z-50 hidden bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="glass-panel rounded-2xl max-w-md w-full p-6 border border-petro-border space-y-4">
+            <div class="flex items-center justify-between border-b border-white/10 pb-3">
+                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                    <i data-lucide="plus-square" class="w-5 h-5 text-petro-cyan"></i>
+                    افزودن دکمه عملیاتی به نوار ابزار
+                </h3>
+                <button onclick="closeModal('add-button-modal')" class="text-slate-400 hover:text-white">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs text-slate-300 mb-1">عنوان دکمه</label>
+                    <input id="new-btn-label" type="text" placeholder="مثلاً: خروجی گزارش وزیر" class="w-full px-3 py-2 rounded-xl bg-petro-bg border border-petro-border text-sm text-white focus:outline-none focus:border-petro-cyan">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-300 mb-1">رنگ دکمه (منطبق با پالت)</label>
+                    <select id="new-btn-color" class="w-full px-3 py-2 rounded-xl bg-petro-bg border border-petro-border text-sm text-white focus:outline-none focus:border-petro-cyan">
+                        <option value="pink">صورتی نئون (#ff2a70)</option>
+                        <option value="purple">بنفش سلطنتی (#9c27b0)</option>
+                        <option value="amber">کهربایی طلایی (#ffab00)</option>
+                        <option value="blue">آبی کبالت (#3d5afe)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-300 mb-1">عملکرد دکمه هنگام کلیک</label>
+                    <select id="new-btn-action" class="w-full px-3 py-2 rounded-xl bg-petro-bg border border-petro-border text-sm text-white focus:outline-none focus:border-petro-cyan">
+                        <option value="export">دانلود فایل JSON داده‌های داشبورد</option>
+                        <option value="print">چاپ / ذخیره PDF گزارش مدیریتی</option>
+                        <option value="toast">نمایش اعلان وضعیت اضطراری</option>
+                        <option value="switch-crisis">پرش سریع به تب بحران جنگ ۴۰ روزه</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeModal('add-button-modal')" class="px-4 py-2 rounded-xl bg-petro-card text-xs text-slate-300 hover:bg-petro-border">انصراف</button>
+                <button onclick="createNewButton()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-petro-blue to-petro-cyan text-xs font-bold text-slate-950 shadow-md">افزودن دکمه</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- سیستم اعلان (Toast Notification) بدون استفاده از alert() -->
+    <div id="toast-container" class="fixed bottom-5 left-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <script>
+        // =========================================================================
+        // ۱. ساختار داده‌های جامع گزارش صنعت پتروشیمی (آذر ۱۴۰۵)
+        // =========================================================================
+        const INITIAL_STATE = {
+            editMode: false,
+            activeTab: 'overview',
+            monthlyAlertThreshold: 15, // آستانه هشدار افت ماهانه (درصد)
+            
+            // تب‌های داشبورد (قابل افزودن و حذف)
+            tabs: [
+                { id: 'overview', title: 'نمای کلی و هشدارها (۱۴۰۴)', icon: 'layout-dashboard', removable: false },
+                { id: 'decade', title: 'روند ده‌ساله (۱۳۹۵-۱۴۰۴)', icon: 'bar-chart-3', removable: false },
+                { id: 'market', title: 'بازار جهانی و اختلاف قیمت', icon: 'globe', removable: false },
+                { id: 'crisis', title: 'پایش پس از جنگ ۴۰ روزه', icon: 'shield-alert', removable: false },
+                { id: 'upstream', title: 'خوراک، یوتیلیتی و تراز تجاری', icon: 'flame', removable: false },
+                { id: 'future', title: 'چشم‌انداز و رصد ماهانه', icon: 'trending-up', removable: false }
+            ],
+
+            // دکمه‌های سفارشی نوار بالا
+            customButtons: [
+                { id: 'btn-export', label: 'خروجی داده‌ها (JSON)', color: 'blue', action: 'export' }
+            ],
+
+            // بخش ۱: شاخص‌های کلیدی نمای کلی ۱۴۰۴
+            kpis1404: [
+                { id: 'cap', title: 'ظرفیت اسمی کل', value: 101, unit: 'میلیون تن', sub: 'هدف اولیه: ۱۰۵ | ۱۴۰۳: ۹۷', status: 'رسمی', color: '#ff2a70' },
+                { id: 'prod', title: 'تولید واقعی کل', value: 75.5, unit: 'میلیون تن', sub: 'هدف اولیه: ۸۳٫۵ میلیون تن', status: 'رسمی', color: '#9c27b0' },
+                { id: 'val', title: 'ارزش کل تولید', value: 22, unit: 'میلیارد دلار', sub: 'بهره‌وری ظرفیت: ۷۵٪', status: 'رسمی', color: '#ffab00' },
+                { id: 'exp', title: 'ارزش صادراتی', value: 12, unit: 'میلیارد دلار', sub: 'اختلاف آمار گمرک: ۱٫۳ م.د', status: 'رسمی', color: '#3d5afe' },
+                { id: 'inv', title: 'سرمایه‌گذاری تجمعی', value: 91.6, unit: 'میلیارد دلار', sub: 'نیاز تا پایان برنامه هفتم: ۴۰۰ م.د', status: 'رسمی', color: '#00e5ff' },
+                { id: 'emp', title: 'اشتغال مستقیم / غیرمستقیم', value: '۱۴۸ هزار / ۱٫۲ م', unit: 'نفر', sub: 'سهم از مصرف گاز کشور: ~۱۰٪', status: 'رسمی', color: '#34d399' }
+            ],
+
+            // نمودار حلقه‌ای سه‌بعدی (الهام از ردیف بالای تصویر الگو: 90%, 75%, 70%, 60%)
+            ringMetrics: [
+                { id: 'r1', label: 'تأمین خوراک گازی (غیرزمستان)', percent: 90, color: 0xff2a70, hex: '#ff2a70', desc: 'نسبت به نیاز اسمی مجتمع‌ها' },
+                { id: 'r2', label: 'بهره‌وری ظرفیت ۱۴۰۴', percent: 75, color: 0x9c27b0, hex: '#9c27b0', desc: '۷۵٫۵ از ۱۰۱ میلیون تن' },
+                { id: 'r3', label: 'تحقق برنامه تولید ۱۴۰۴', percent: 72, color: 0xffab00, hex: '#ffab00', desc: 'نسبت به هدف اولیه ۸۳٫۵ م.ت' },
+                { id: 'r4', label: 'ارزآوری صادراتی به ارزش کل', percent: 55, color: 0x3d5afe, hex: '#3d5afe', desc: '۱۲ از ۲۲ میلیارد دلار' }
+            ],
+
+            // هشدارهای کلیدی مدیریتی
+            alerts: [
+                { id: 'a1', level: 'red', title: 'خسارت جنگ ۴۰ روزه (آغاز ۹ اسفند ۱۴۰۴)', text: 'آسیب به یوتیلیتی ماهشهر (مرکز فجر) و چند مجتمع؛ توقف صادرات به مدت ۲ تا ۳ ماه.' },
+                { id: 'a2', level: 'amber', title: 'مغایرت آماری شرکت ملی پتروشیمی و گمرک', text: 'در چهارماهه ۱۴۰۴ حدود ۴٫۴ میلیون تن و ۱٫۳ میلیارد دلار اختلاف ثبت شده است.' },
+                { id: 'a3', level: 'amber', title: 'گلوگاه خوراک گازی و برق/بخار', text: 'تأمین پایدار گاز، برق و بخار مهم‌ترین شرط بازگشت مجتمع‌ها به ظرفیت اسمی است.' }
+            ],
+
+            // بخش ۲: آمار ده‌ساله (۱۳۹۵ تا ۱۴۰۴)
+            decadeData: [
+                { year: '۱۳۹۵', capacity: 64, production: 53.6, exportVol: 22.4, exportVal: 12.0, efficiency: 84, status: 'رسمی' },
+                { year: '۱۳۹۶', capacity: 69, production: 58.0, exportVol: 24.0, exportVal: 11.5, efficiency: 84, status: 'برآورد' },
+                { year: '۱۳۹۷', capacity: 74, production: 62.0, exportVol: 25.0, exportVal: 12.5, efficiency: 84, status: 'برآورد' },
+                { year: '۱۳۹۸', capacity: 80, production: 65.0, exportVol: 26.0, exportVal: 14.0, efficiency: 81, status: 'رسمی/برآورد' },
+                { year: '۱۳۹۹', capacity: 86, production: 67.0, exportVol: 27.0, exportVal: 12.5, efficiency: 78, status: 'برآورد' },
+                { year: '۱۴۰۰', capacity: 92, production: 70.0, exportVol: 28.0, exportVal: 14.0, efficiency: 76, status: 'رسمی' },
+                { year: '۱۴۰۱', capacity: 93, production: 72.0, exportVol: 28.0, exportVal: 14.5, efficiency: 77, status: 'برآورد' },
+                { year: '۱۴۰۲', capacity: 95, production: 74.0, exportVol: 28.5, exportVal: 13.5, efficiency: 78, status: 'برآورد' },
+                { year: '۱۴۰۳', capacity: 97, production: 75.2, exportVol: 29.2, exportVal: 13.0, efficiency: 78, status: 'رسمی' },
+                { year: '۱۴۰۴', capacity: 101, production: 75.5, exportVol: 0, exportVal: 12.0, efficiency: 75, status: 'رسمی' }
+            ],
+
+            // ترکیب فروش ۱۴۰۳
+            salesMix1403: [
+                { channel: 'صادرات', volume: 29.2, value: 13.0, color: '#ff2a70' },
+                { channel: 'فروش داخلی', volume: 13.1, value: 11.0, color: '#3d5afe' }
+            ],
+
+            // بخش ۳: بازار جهانی و اختلاف قیمت (نمونه قابل ویرایش)
+            globalPrices: [
+                { id: 'p1', product: 'متانول', globalPrice: 380, iranPrice: 340, status: 'نمونه' },
+                { id: 'p2', product: 'اوره', globalPrice: 420, iranPrice: 380, status: 'نمونه' },
+                { id: 'p3', product: 'پلی‌اتیلن', globalPrice: 1000, iranPrice: 880, status: 'نمونه' },
+                { id: 'p4', product: 'پلی‌پروپیلن', globalPrice: 980, iranPrice: 860, status: 'نمونه' },
+                { id: 'p5', product: 'اتیلن‌گلیکول', globalPrice: 560, iranPrice: 500, status: 'نمونه' }
+            ],
+
+            // بخش ۴: شرایط پس از جنگ ۴۰ روزه
+            crisisMetrics: [
+                { id: 'c1', title: 'ادعای افت تولید در اوج بحران', value: 'تا ۷۵٪', status: 'تأییدنشده', color: '#ff2a70' },
+                { id: 'c2', title: 'مدت توقف صادرات', value: '۲ تا ۳ ماه', status: 'گزارش رسانه', color: '#ffab00' },
+                { id: 'c3', title: 'برق و بخار آسیب‌دیده فجر', value: '۱۴۹۵ مگاوات + ۱۵۰۰ تن', status: 'گزارش', color: '#9c27b0' },
+                { id: 'c4', title: 'خسارت پتروشیمی شیراز', value: '۱۵۸٫۸ میلیون دلار', status: 'گزارش', color: '#3d5afe' }
+            ],
+            crisisTimeline: [
+                { date: '۹ اسفند ۱۴۰۴', title: 'آغاز جنگ ۴۰ روزه', desc: 'حمله به بخشی از مجتمع‌های پتروشیمی و تأسیسات حیاتی برق و بخار ماهشهر.' },
+                { date: 'روزهای جنگ', title: 'تداوم تولید حداقلی', desc: 'هلدینگ خلیج فارس حدود ۲٫۸ میلیون تن تولید در شرایط جنگی گزارش کرد.' },
+                { date: 'آتش‌بس', title: 'تشکیل کارگروه بازسازی NPC', desc: 'تمرکز ویژه شرکت ملی صنایع پتروشیمی بر تأمین مواد اولیه صنایع پایین‌دست.' },
+                { date: 'پس از آتش‌بس', title: 'ازسرگیری تدریجی صادرات', desc: 'تداوم ارزیابی دقیق خسارات فیزیکی، بیمه، حمل و تأخیر پروژه‌ها.' }
+            ],
+
+            // بخش ۵: شاخص‌های رصد خوراک و یوتیلیتی
+            feedstockChecklist: [
+                { id: 'f1', label: 'تأمین گاز خوراک (زمستان)', state: 'بحرانی' },
+                { id: 'f2', label: 'برق و بخار ماهشهر (فجر)', state: 'بحرانی' },
+                { id: 'f3', label: 'پایانه‌ها و بنادر صادراتی', state: 'در حال رصد' },
+                { id: 'f4', label: 'امنیت حمل دریایی و بیمه', state: 'در حال رصد' },
+                { id: 'f5', label: 'وضعیت آتش‌بس / تحریم', state: 'در حال رصد' },
+                { id: 'f6', label: 'قیمت‌های جهانی و مارژین', state: 'پایدار' }
+            ],
+
+            // بخش ۶: واردات و تراز تجاری (۱۰ سال)
+            tradeBalance: [
+                { year: '۱۳۹۵', exportVal: 12.0, importVal: 1.8 },
+                { year: '۱۳۹۶', exportVal: 11.5, importVal: 1.9 },
+                { year: '۱۳۹۷', exportVal: 12.5, importVal: 1.5 },
+                { year: '۱۳۹۸', exportVal: 14.0, importVal: 1.4 },
+                { year: '۱۳۹۹', exportVal: 12.5, importVal: 1.3 },
+                { year: '۱۴۰۰', exportVal: 14.0, importVal: 1.6 },
+                { year: '۱۴۰۱', exportVal: 14.5, importVal: 1.7 },
+                { year: '۱۴۰۲', exportVal: 13.5, importVal: 1.8 },
+                { year: '۱۴۰۳', exportVal: 13.0, importVal: 1.9 },
+                { year: '۱۴۰۴', exportVal: 12.0, importVal: 2.1 }
+            ],
+
+            // بخش ۷: آینده صنعت پتروشیمی
+            futureProjection: [
+                { year: '۱۴۰۴', officialTarget: 101, slowScenario: 101 },
+                { year: '۱۴۰۵', officialTarget: 111, slowScenario: 103 },
+                { year: '۱۴۰۶', officialTarget: 121, slowScenario: 107 },
+                { year: '۱۴۰۷ (پایان برنامه ۷)', officialTarget: 131, slowScenario: 112 }
+            ],
+
+            // بخش ۸: جدول رصد ماهانه
+            monthlyMonitoring: [
+                { id: 'm1', month: 'فروردین ۱۴۰۵', prod: 4.2, expVol: 1.1, expVal: 0.48 },
+                { id: 'm2', month: 'اردیبهشت ۱۴۰۵', prod: 5.1, expVol: 1.8, expVal: 0.79 },
+                { id: 'm3', month: 'خرداد ۱۴۰۵', prod: 5.9, expVol: 2.3, expVal: 1.02 }
+            ],
+
+            // داده‌های تب‌های سفارشی کاربر
+            customTabsData: {}
+        };
+
+        // کپی عمیق برای مدیریت وضعیت جاری
+        let appState = JSON.parse(JSON.stringify(INITIAL_STATE));
+        let activeThreeScenes = []; // نگهداری صحنه‌های Three.js برای پاکسازی حافظه هنگام تغییر تب
+
+        // =========================================================================
+        // ۲. موتور رندر نمودارهای سه‌بعدی با Three.js (منطبق با هندسه و رنگ تم‌پلیت)
+        // =========================================================================
+        function clearThreeScenes() {
+            activeThreeScenes.forEach(item => {
+                if (item.animationId) cancelAnimationFrame(item.animationId);
+                if (item.renderer) {
+                    item.renderer.dispose();
+                }
+            });
+            activeThreeScenes = [];
+        }
+
+        /**
+         * ساخت نمودار حلقه‌ای سه‌بعدی (3D Donut Ring) مشابه ردیف بالای تصویر الگو
+         */
+        function init3DRingChart(containerId, percent, hexColor) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            const width = container.clientWidth || 160;
+            const height = container.clientHeight || 150;
+
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100);
+            camera.position.set(0, 4.2, 4.5);
+            camera.lookAt(0, 0, 0);
+
+            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(width, height);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.innerHTML = '';
+            container.appendChild(renderer.domElement);
+
+            // نورپردازی سه‌بعدی ایزومتریک
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
+            scene.add(ambientLight);
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+            dirLight.position.set(5, 10, 7);
+            scene.add(dirLight);
+
+            const group = new THREE.Group();
+            scene.add(group);
+
+            // رینگ پس‌زمینه تیره (مسیر کامل ۳۶۰ درجه)
+            const bgShape = new THREE.Shape();
+            bgShape.absarc(0, 0, 1.6, 0, Math.PI * 2, false);
+            const bgHole = new THREE.Path();
+            bgHole.absarc(0, 0, 1.05, 0, Math.PI * 2, true);
+            bgShape.holes.push(bgHole);
+
+            const bgGeo = new THREE.ExtrudeGeometry(bgShape, { depth: 0.35, bevelEnabled: true, bevelThickness: 0.04, bevelSize: 0.04, curveSegments: 48 });
+            bgGeo.rotateX(Math.PI / 2);
+            const bgMat = new THREE.MeshStandardMaterial({ color: 0x26353b, roughness: 0.5, metalness: 0.2 });
+            const bgMesh = new THREE.Mesh(bgGeo, bgMat);
+            group.add(bgMesh);
+
+            // رینگ رنگی مقدار درصد (برجسته‌تر مشابه تم‌پلیت)
+            const clampedPct = Math.max(2, Math.min(100, percent));
+            const angle = (clampedPct / 100) * Math.PI * 2;
+            const fgShape = new THREE.Shape();
+            fgShape.absarc(0, 0, 1.65, 0, angle, false);
+            const fgHole = new THREE.Path();
+            fgHole.absarc(0, 0, 1.0, 0, angle, true);
+            fgShape.holes.push(fgHole);
+
+            const fgGeo = new THREE.ExtrudeGeometry(fgShape, { depth: 0.52, bevelEnabled: true, bevelThickness: 0.05, bevelSize: 0.05, curveSegments: 48 });
+            fgGeo.rotateX(Math.PI / 2);
+            const fgMat = new THREE.MeshStandardMaterial({
+                color: new THREE.Color(hexColor),
+                roughness: 0.25,
+                metalness: 0.15,
+                emissive: new THREE.Color(hexColor),
+                emissiveIntensity: 0.18
+            });
+            const fgMesh = new THREE.Mesh(fgGeo, fgMat);
+            fgMesh.position.y = 0.08;
+            group.add(fgMesh);
+
+            // تعامل چرخش با ماوس و لمس
+            let isDragging = false;
+            let prevX = 0;
+            renderer.domElement.addEventListener('pointerdown', (e) => { isDragging = true; prevX = e.clientX; });
+            window.addEventListener('pointerup', () => { isDragging = false; });
+            renderer.domElement.addEventListener('pointermove', (e) => {
+                if (!isDragging) return;
+                const delta = e.clientX - prevX;
+                group.rotation.y += delta * 0.015;
+                prevX = e.clientX;
+            });
+
+            let animId;
+            function animate() {
+                animId = requestAnimationFrame(animate);
+                if (!isDragging) {
+                    group.rotation.y += 0.004;
+                }
+                renderer.render(scene, camera);
+            }
+            animate();
+
+            activeThreeScenes.push({ renderer, animationId: animId });
+        }
+
+        /**
+         * ساخت نمودار ستونی استوانه‌ای یا مکعبی ایزومتریک سه‌بعدی (منطبق با بخش پایین تم‌پلیت)
+         * @param {string} style - 'cylinder' (استوانه داخل محفظه شیشه‌ای) یا 'prism' (منشور با سایه ظرفیت)
+         */
+        function init3DBarChart(containerId, items, style = 'cylinder') {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            const width = container.clientWidth || 500;
+            const height = container.clientHeight || 340;
+
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(38, width / height, 0.1, 100);
+            camera.position.set(6.5, 6.2, 8.5);
+            camera.lookAt(0, 1.2, 0);
+
+            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(width, height);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.innerHTML = '';
+            container.appendChild(renderer.domElement);
+
+            // نورپردازی استودیویی
+            const ambient = new THREE.AmbientLight(0xffffff, 0.7);
+            scene.add(ambient);
+            const keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
+            keyLight.position.set(8, 15, 10);
+            scene.add(keyLight);
+            const fillLight = new THREE.DirectionalLight(0x00e5ff, 0.35);
+            fillLight.position.set(-8, 5, -5);
+            scene.add(fillLight);
+
+            const chartGroup = new THREE.Group();
+            scene.add(chartGroup);
+
+            // صفحه گرید پایه بسیار ظریف
+            const gridHelper = new THREE.GridHelper(10, 10, 0x2d3f47, 0x223036);
+            gridHelper.position.y = -0.01;
+            chartGroup.add(gridHelper);
+
+            const palette = ['#ff2a70', '#9c27b0', '#ffab00', '#3d5afe', '#00e5ff', '#34d399', '#f43f5e', '#8b5cf6', '#eab308', '#3b82f6'];
+            const maxVal = Math.max(...items.map(i => Math.max(i.value, i.max || 0)), 1);
+            const maxHeight = 4.2;
+            const count = items.length;
+            const spacing = count > 6 ? 1.05 : 1.55;
+            const startX = -((count - 1) * spacing) / 2;
+
+            items.forEach((item, idx) => {
+                const xPos = startX + idx * spacing;
+                const colorHex = item.color || palette[idx % palette.length];
+                const barHeight = Math.max(0.15, (item.value / maxVal) * maxHeight);
+                const capHeight = item.max ? Math.max(barHeight, (item.max / maxVal) * maxHeight) : maxHeight;
+
+                if (style === 'cylinder') {
+                    // پایه استوانه‌ای شیشه‌ای شفاف (دقیقاً مشابه سمت چپ پایین تم‌پلیت)
+                    const baseGeo = new THREE.CylinderGeometry(0.55, 0.55, 1.1, 32);
+                    const baseMat = new THREE.MeshPhysicalMaterial({
+                        color: 0x4b636e,
+                        transparent: true,
+                        opacity: 0.28,
+                        roughness: 0.1,
+                        metalness: 0.1
+                    });
+                    const baseMesh = new THREE.Mesh(baseGeo, baseMat);
+                    baseMesh.position.set(xPos, 0.55, 0);
+                    chartGroup.add(baseMesh);
+
+                    // استوانه اصلی داده
+                    const cylGeo = new THREE.CylinderGeometry(0.38, 0.38, barHeight, 32);
+                    const cylMat = new THREE.MeshStandardMaterial({
+                        color: new THREE.Color(colorHex),
+                        roughness: 0.25,
+                        metalness: 0.15,
+                        emissive: new THREE.Color(colorHex),
+                        emissiveIntensity: 0.15
+                    });
+                    const cylMesh = new THREE.Mesh(cylGeo, cylMat);
+                    cylMesh.position.set(xPos, barHeight / 2, 0);
+                    chartGroup.add(cylMesh);
+
+                    // درپوش روشن بالای استوانه
+                    const capGeo = new THREE.CylinderGeometry(0.385, 0.385, 0.06, 32);
+                    const capMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.45 });
+                    const capMesh = new THREE.Mesh(capGeo, capMat);
+                    capMesh.position.set(xPos, barHeight, 0);
+                    chartGroup.add(capMesh);
+
+                } else {
+                    // منشور چهارگوش ایزومتریک همراه با ستون سایه ظرفیت (دقیقاً مشابه سمت راست پایین تم‌پلیت)
+                    const boxWidth = count > 6 ? 0.62 : 0.85;
+                    
+                    // ستون شبح پشتی (نشان‌دهنده سقف هدف یا ظرفیت اسمی)
+                    const ghostGeo = new THREE.BoxGeometry(boxWidth, capHeight, boxWidth);
+                    const ghostMat = new THREE.MeshStandardMaterial({
+                        color: 0x455a64,
+                        transparent: true,
+                        opacity: 0.22,
+                        roughness: 0.4
+                    });
+                    const ghostMesh = new THREE.Mesh(ghostGeo, ghostMat);
+                    ghostMesh.position.set(xPos, capHeight / 2, -0.35);
+                    chartGroup.add(ghostMesh);
+
+                    // ستون رنگی اصلی (تولید واقعی یا عملکرد)
+                    const barGeo = new THREE.BoxGeometry(boxWidth, barHeight, boxWidth);
+                    const barMat = new THREE.MeshStandardMaterial({
+                        color: new THREE.Color(colorHex),
+                        roughness: 0.28,
+                        metalness: 0.15,
+                        emissive: new THREE.Color(colorHex),
+                        emissiveIntensity: 0.15
+                    });
+                    const barMesh = new THREE.Mesh(barGeo, barMat);
+                    barMesh.position.set(xPos, barHeight / 2, 0.15);
+                    chartGroup.add(barMesh);
+                }
+            });
+
+            // کنترل چرخش و زوم سه‌بعدی با ماوس و تاچ
+            let isDragging = false;
+            let prevX = 0;
+            let prevY = 0;
+
+            renderer.domElement.addEventListener('pointerdown', (e) => {
+                isDragging = true;
+                prevX = e.clientX;
+                prevY = e.clientY;
+            });
+            window.addEventListener('pointerup', () => { isDragging = false; });
+            renderer.domElement.addEventListener('pointermove', (e) => {
+                if (!isDragging) return;
+                const dx = e.clientX - prevX;
+                const dy = e.clientY - prevY;
+                chartGroup.rotation.y += dx * 0.01;
+                chartGroup.rotation.x = Math.max(-0.35, Math.min(0.45, chartGroup.rotation.x + dy * 0.005));
+                prevX = e.clientX;
+                prevY = e.clientY;
+            });
+
+            renderer.domElement.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                camera.position.z = Math.max(5, Math.min(15, camera.position.z + e.deltaY * 0.005));
+            }, { passive: false });
+
+            let animId;
+            function animate() {
+                animId = requestAnimationFrame(animate);
+                renderer.render(scene, camera);
+            }
+            animate();
+
+            activeThreeScenes.push({ renderer, animationId: animId });
+        }
+
+        // =========================================================================
+        // ۳. توابع کمکی رابط کاربری، اعلان‌ها و ویرایش زنده
+        // =========================================================================
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const colors = {
+                info: 'border-petro-cyan bg-petro-card text-white',
+                success: 'border-emerald-400 bg-petro-card text-emerald-200',
+                warning: 'border-petro-amber bg-petro-card text-amber-200',
+                danger: 'border-petro-pink bg-petro-card text-rose-200'
+            };
+            toast.className = `pointer-events-auto flex items-center gap-2.5 px-4 py-3 rounded-xl border shadow-2xl text-xs font-medium transition-all duration-300 transform translate-y-2 opacity-0 ${colors[type] || colors.info}`;
+            toast.innerHTML = `<i data-lucide="bell" class="w-4 h-4 shrink-0"></i><span>${message}</span>`;
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        function toggleEditMode() {
+            appState.editMode = !appState.editMode;
+            const btn = document.getElementById('toggle-edit-btn');
+            const btnText = document.getElementById('edit-btn-text');
+            const banner = document.getElementById('edit-banner');
+
+            if (appState.editMode) {
+                btn.classList.remove('from-petro-pink', 'to-petro-purple');
+                btn.classList.add('from-emerald-500', 'to-teal-600');
+                btnText.textContent = 'ذخیره و خروج از ویرایش';
+                banner.classList.remove('hidden');
+                showToast('حالت ویرایش زنده فعال شد. روی مقادیر کلیک کنید.', 'warning');
+            } else {
+                btn.classList.add('from-petro-pink', 'to-petro-purple');
+                btn.classList.remove('from-emerald-500', 'to-teal-600');
+                btnText.textContent = 'حالت ویرایش داده‌ها';
+                banner.classList.add('hidden');
+                showToast('تغییرات اعمال و نمودارهای سه‌بعدی بروزرسانی شدند.', 'success');
+            }
+            renderDashboard();
+        }
+
+        function resetAllData() {
+            appState = JSON.parse(JSON.stringify(INITIAL_STATE));
+            showToast('تمامی داده‌ها به مقادیر اصلی گزارش بازنشانی شدند.', 'info');
+            renderTabs();
+            renderCustomButtons();
+            renderDashboard();
+        }
+
+        function switchTab(tabId) {
+            appState.activeTab = tabId;
+            renderTabs();
+            renderDashboard();
+        }
+
+        function getBadgeClass(status) {
+            if (status.includes('رسمی')) return 'badge-official';
+            if (status.includes('برآورد') || status.includes('گزارش')) return 'badge-estimate';
+            return 'badge-sample';
+        }
+
+        // تبدیل اعداد انگلیسی به فارسی برای نمایش زیبا
+        function toFa(num) {
+            if (num === null || num === undefined) return '—';
+            return num.toString().replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]).replace('.', '٫');
+        }
+
+        // =========================================================================
+        // ۴. مدیریت افزودن تب و دکمه سفارشی
+        // =========================================================================
+        function openAddTabModal() {
+            document.getElementById('new-tab-title').value = '';
+            document.getElementById('add-tab-modal').classList.remove('hidden');
+        }
+
+        function openAddButtonModal() {
+            document.getElementById('new-btn-label').value = '';
+            document.getElementById('add-button-modal').classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function createNewTab() {
+            const title = document.getElementById('new-tab-title').value.trim();
+            const type = document.getElementById('new-tab-type').value;
+            if (!title) {
+                showToast('لطفاً عنوان تب را وارد کنید.', 'danger');
+                return;
+            }
+            const newId = 'custom-' + Date.now();
+            appState.tabs.push({
+                id: newId,
+                title: title,
+                icon: type === 'custom-chart' ? 'box' : 'file-text',
+                removable: true,
+                type: type
+            });
+            appState.customTabsData[newId] = {
+                type: type,
+                title: title,
+                notes: 'این بخش توسط مدیر سیستم ایجاد شده است. برای ویرایش متن یا اعداد، حالت ویرایش را فعال کنید.',
+                bars: [
+                    { label: 'شاخص اول', value: 82, max: 100, color: '#ff2a70' },
+                    { label: 'شاخص دوم', value: 64, max: 100, color: '#9c27b0' },
+                    { label: 'شاخص سوم', value: 91, max: 100, color: '#ffab00' },
+                    { label: 'شاخص چهارم', value: 48, max: 100, color: '#3d5afe' }
+                ]
+            };
+            closeModal('add-tab-modal');
+            switchTab(newId);
+            showToast(`تب «${title}» با موفقیت ایجاد شد.`, 'success');
+        }
+
+        function removeTab(e, tabId) {
+            e.stopPropagation();
+            appState.tabs = appState.tabs.filter(t => t.id !== tabId);
+            delete appState.customTabsData[tabId];
+            if (appState.activeTab === tabId) {
+                appState.activeTab = 'overview';
+            }
+            renderTabs();
+            renderDashboard();
+            showToast('تب سفارشی حذف شد.', 'info');
+        }
+
+        function createNewButton() {
+            const label = document.getElementById('new-btn-label').value.trim();
+            const color = document.getElementById('new-btn-color').value;
+            const action = document.getElementById('new-btn-action').value;
+            if (!label) {
+                showToast('لطفاً عنوان دکمه را وارد کنید.', 'danger');
+                return;
+            }
+            appState.customButtons.push({
+                id: 'btn-' + Date.now(),
+                label,
+                color,
+                action
+            });
+            closeModal('add-button-modal');
+            renderCustomButtons();
+            showToast(`دکمه «${label}» به نوار ابزار اضافه شد.`, 'success');
+        }
+
+        function removeCustomButton(e, btnId) {
+            e.stopPropagation();
+            appState.customButtons = appState.customButtons.filter(b => b.id !== btnId);
+            renderCustomButtons();
+            showToast('دکمه حذف شد.', 'info');
+        }
+
+        function executeCustomButton(action, label) {
+            if (action === 'export') {
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState, null, 2));
+                const dlAnchor = document.createElement('a');
+                dlAnchor.setAttribute("href", dataStr);
+                dlAnchor.setAttribute("download", "petrochem-ministerial-report-1405.json");
+                document.body.appendChild(dlAnchor);
+                dlAnchor.click();
+                dlAnchor.remove();
+                showToast('فایل خروجی داده‌های داشبورد دانلود شد.', 'success');
+            } else if (action === 'print') {
+                window.print();
+            } else if (action === 'switch-crisis') {
+                switchTab('crisis');
+                showToast('نمایش گزارش پایش پس از جنگ ۴۰ روزه', 'warning');
+            } else {
+                showToast(`دستور «${label}» با موفقیت اجرا شد.`, 'info');
+            }
+        }
+
+        // =========================================================================
+        // ۵. رندر تب‌ها و دکمه‌های سفارشی
+        // =========================================================================
+        function renderTabs() {
+            const nav = document.getElementById('tabs-nav');
+            nav.innerHTML = appState.tabs.map(tab => {
+                const isActive = appState.activeTab === tab.id;
+                return `
+                    <button onclick="switchTab('${tab.id}')" class="group relative flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all ${
+                        isActive
+                        ? 'bg-gradient-to-r from-petro-pink/20 to-petro-purple/20 text-white border border-petro-pink/50 shadow-md shadow-petro-pink/10'
+                        : 'text-slate-400 hover:text-white hover:bg-white/5 border border-transparent'
+                    }">
+                        <i data-lucide="${tab.icon}" class="w-4 h-4 ${isActive ? 'text-petro-pink' : 'text-slate-400 group-hover:text-slate-200'}"></i>
+                        <span>${tab.title}</span>
+                        ${tab.removable ? `
+                            <span onclick="removeTab(event, '${tab.id}')" title="حذف تب" class="mr-1 p-0.5 rounded-md hover:bg-red-500/30 text-slate-400 hover:text-red-300">
+                                <i data-lucide="x" class="w-3 h-3"></i>
+                            </span>
+                        ` : ''}
+                    </button>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function renderCustomButtons() {
+            const container = document.getElementById('custom-buttons-container');
+            const colorMap = {
+                pink: 'bg-petro-pink/20 text-petro-pink border-petro-pink/40 hover:bg-petro-pink/30',
+                purple: 'bg-petro-purple/25 text-purple-300 border-petro-purple/50 hover:bg-petro-purple/35',
+                amber: 'bg-petro-amber/20 text-petro-amber border-petro-amber/40 hover:bg-petro-amber/30',
+                blue: 'bg-petro-blue/25 text-blue-300 border-petro-blue/50 hover:bg-petro-blue/35'
+            };
+            container.innerHTML = appState.customButtons.map(btn => `
+                <div class="inline-flex items-center rounded-xl border text-xs font-medium transition-all ${colorMap[btn.color] || colorMap.blue}">
+                    <button onclick="executeCustomButton('${btn.action}', '${btn.label}')" class="px-3 py-2 flex items-center gap-1.5">
+                        <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+                        <span>${btn.label}</span>
+                    </button>
+                    ${appState.editMode ? `
+                        <button onclick="removeCustomButton(event, '${btn.id}')" class="pl-2 pr-1 py-2 hover:text-red-400" title="حذف دکمه">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        </button>
+                    ` : ''}
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        // =========================================================================
+        // ۶. رندر محتوای هر تب
+        // =========================================================================
+        function renderDashboard() {
+            clearThreeScenes();
+            renderCustomButtons();
+            const container = document.getElementById('dashboard-content');
+            const tab = appState.activeTab;
+
+            if (tab === 'overview') {
+                renderOverviewTab(container);
+            } else if (tab === 'decade') {
+                renderDecadeTab(container);
+            } else if (tab === 'market') {
+                renderMarketTab(container);
+            } else if (tab === 'crisis') {
+                renderCrisisTab(container);
+            } else if (tab === 'upstream') {
+                renderUpstreamTab(container);
+            } else if (tab === 'future') {
+                renderFutureTab(container);
+            } else if (appState.customTabsData[tab]) {
+                renderCustomTab(container, tab);
+            }
+
+            lucide.createIcons();
+        }
+
+        // -------------------------------------------------------------------------
+        // تب ۱: نمای کلی ۱۴۰۴ + نمودارهای حلقه‌ای سه‌بعدی + نمودار ایزومتریک + هشدارها
+        // -------------------------------------------------------------------------
+        function renderOverviewTab(container) {
+            container.innerHTML = `
+                <!-- ردیف کارت‌های KPI کلیدی -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+                    ${appState.kpis1404.map((kpi, idx) => `
+                        <div class="glass-panel rounded-2xl p-4 relative overflow-hidden group hover:border-white/20 transition-all">
+                            <div class="absolute top-0 right-0 w-1.5 h-full" style="background:${kpi.color}"></div>
+                            <div class="flex items-center justify-between gap-2 mb-2">
+                                <span class="text-xs text-slate-400 font-medium">${kpi.title}</span>
+                                <span class="px-2 py-0.5 text-[10px] rounded-full ${getBadgeClass(kpi.status)}">${kpi.status}</span>
+                            </div>
+                            <div class="flex items-baseline gap-1.5 my-1">
+                                ${appState.editMode && typeof kpi.value === 'number' ? `
+                                    <input type="number" step="0.1" value="${kpi.value}" onchange="updateKpi1404(${idx}, this.value)"
+                                        class="w-24 px-2 py-1 rounded-lg bg-petro-bg border border-petro-pink text-lg font-extrabold text-white">
+                                ` : `
+                                    <span class="text-2xl font-extrabold text-white">${typeof kpi.value === 'number' ? toFa(kpi.value) : kpi.value}</span>
+                                `}
+                                <span class="text-xs text-slate-300 font-medium">${kpi.unit}</span>
+                            </div>
+                            <p class="text-[11px] text-slate-400 mt-2 truncate" title="${kpi.sub}">${kpi.sub}</p>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <!-- ردیف نمودارهای حلقه‌ای سه‌بعدی (الهام گرفته از ردیف بالای تم‌پلیت) -->
+                <div class="glass-panel rounded-2xl p-5">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                        <div>
+                            <h2 class="text-base font-bold text-white flex items-center gap-2">
+                                <i data-lucide="pie-chart" class="w-5 h-5 text-petro-pink"></i>
+                                شاخص‌های درصدی عملکرد و بهره‌وری (مدل حلقه‌ای سه‌بعدی)
+                            </h2>
+                            <p class="text-xs text-slate-400 mt-0.5">قابلیت چرخش سه‌بعدی با ماوس و تغییر درصدها در حالت ویرایش</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        ${appState.ringMetrics.map((ring, idx) => `
+                            <div class="bg-petro-bg/70 rounded-2xl p-4 border border-petro-border/70 flex flex-col items-center text-center relative">
+                                <div class="relative w-full h-36 flex items-center justify-center">
+                                    <div id="ring-canvas-${idx}" class="canvas-container w-full h-full"></div>
+                                    <div class="pointer-events-none absolute inset-0 flex items-center justify-center">
+                                        <span class="text-xl font-black drop-shadow-md" style="color:${ring.hex}">${toFa(ring.percent)}٪</span>
+                                    </div>
+                                </div>
+                                <h3 class="text-xs font-bold text-white mt-2">${ring.label}</h3>
+                                <p class="text-[11px] text-slate-400 mt-1">${ring.desc}</p>
+                                ${appState.editMode ? `
+                                    <div class="mt-2 flex items-center gap-2">
+                                        <label class="text-[10px] text-slate-300">درصد:</label>
+                                        <input type="number" min="0" max="100" value="${ring.percent}" onchange="updateRingMetric(${idx}, this.value)"
+                                            class="w-16 px-2 py-1 rounded-lg bg-petro-card border border-petro-amber text-xs text-center text-white">
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <!-- ردیف میانی: نمودار استوانه‌ای سه‌بعدی + پنل هشدارهای کلیدی مدیریتی -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <!-- نمودار استوانه‌ای سه‌بعدی با پایه شیشه‌ای (مشابه سمت چپ تم‌پلیت) -->
+                    <div class="lg:col-span-7 glass-panel rounded-2xl p-5 flex flex-col">
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <h2 class="text-base font-bold text-white flex items-center gap-2">
+                                    <i data-lucide="cylinder" class="w-5 h-5 text-petro-amber"></i>
+                                    مقایسه حجمی و ارزشی کلان ۱۴۰۴ (ستون‌های استوانه‌ای سه‌بعدی)
+                                </h2>
+                                <p class="text-xs text-slate-400">نمایش ظرفیت اسمی، تولید واقعی، ارزش تولید و ارزش صادراتی</p>
+                            </div>
+                            <span class="text-[11px] text-slate-400 bg-petro-bg px-2.5 py-1 rounded-lg border border-petro-border">چرخش با ماوس</span>
+                        </div>
+                        <div id="overview-3d-cylinders" class="canvas-container flex-1 min-h-[300px] rounded-xl bg-petro-bg/50 border border-white/5"></div>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4 pt-3 border-t border-white/5 text-center text-xs">
+                            <div class="p-2 rounded-xl bg-petro-bg/60"><span class="inline-block w-2.5 h-2.5 rounded-full bg-petro-pink ml-1.5"></span>ظرفیت: ${toFa(appState.kpis1404[0].value)} م.ت</div>
+                            <div class="p-2 rounded-xl bg-petro-bg/60"><span class="inline-block w-2.5 h-2.5 rounded-full bg-petro-purple ml-1.5"></span>تولید: ${toFa(appState.kpis1404[1].value)} م.ت</div>
+                            <div class="p-2 rounded-xl bg-petro-bg/60"><span class="inline-block w-2.5 h-2.5 rounded-full bg-petro-amber ml-1.5"></span>ارزش تولید: ${toFa(appState.kpis1404[2].value)} م.د</div>
+                            <div class="p-2 rounded-xl bg-petro-bg/60"><span class="inline-block w-2.5 h-2.5 rounded-full bg-petro-blue ml-1.5"></span>صادرات: ${toFa(appState.kpis1404[3].value)} م.د</div>
+                        </div>
+                    </div>
+
+                    <!-- هشدارهای کلیدی مدیریتی -->
+                    <div class="lg:col-span-5 glass-panel rounded-2xl p-5 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-4">
+                                <h2 class="text-base font-bold text-white flex items-center gap-2">
+                                    <i data-lucide="alert-triangle" class="w-5 h-5 text-petro-pink"></i>
+                                    هشدارهای کلیدی اتاق وضعیت
+                                </h2>
+                                <span class="px-2 py-0.5 text-[11px] rounded-full bg-red-500/20 text-red-300 border border-red-500/30">اولویت بالا</span>
+                            </div>
+                            <div class="space-y-3">
+                                ${appState.alerts.map((al, idx) => `
+                                    <div class="p-4 rounded-xl border ${
+                                        al.level === 'red'
+                                        ? 'bg-rose-950/30 border-petro-pink/50 alert-glow-red'
+                                        : 'bg-amber-950/20 border-petro-amber/40'
+                                    }">
+                                        <div class="flex items-center gap-2 mb-1.5">
+                                            <span class="w-3 h-3 rounded-full ${al.level === 'red' ? 'bg-petro-pink' : 'bg-petro-amber'}"></span>
+                                            <h3 class="text-xs font-bold ${al.level === 'red' ? 'text-rose-200' : 'text-amber-200'}">${al.title}</h3>
+                                        </div>
+                                        ${appState.editMode ? `
+                                            <textarea onchange="updateAlertText(${idx}, this.value)" rows="2"
+                                                class="w-full p-2 rounded-lg bg-petro-bg border border-petro-border text-xs text-slate-200">${al.text}</textarea>
+                                        ` : `
+                                            <p class="text-xs text-slate-300 leading-relaxed">${al.text}</p>
+                                        `}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <div class="mt-4 pt-3 border-t border-white/10 flex items-center justify-between text-xs">
+                            <span class="text-slate-400">مشاهده جزئیات کامل خسارات و بازسازی:</span>
+                            <button onclick="switchTab('crisis')" class="px-3 py-1.5 rounded-xl bg-petro-pink/20 hover:bg-petro-pink/30 text-petro-pink font-semibold transition">
+                                پرونده جنگ ۴۰ روزه ←
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // رندر بوم‌های سه‌بعدی پس از درج در DOM
+            setTimeout(() => {
+                appState.ringMetrics.forEach((ring, idx) => {
+                    init3DRingChart(`ring-canvas-${idx}`, ring.percent, ring.hex);
+                });
+
+                init3DBarChart('overview-3d-cylinders', [
+                    { label: 'ظرفیت اسمی', value: Number(appState.kpis1404[0].value), color: '#ff2a70' },
+                    { label: 'تولید واقعی', value: Number(appState.kpis1404[1].value), color: '#9c27b0' },
+                    { label: 'ارزش تولید', value: Number(appState.kpis1404[2].value), color: '#ffab00' },
+                    { label: 'ارزش صادرات', value: Number(appState.kpis1404[3].value), color: '#3d5afe' }
+                ], 'cylinder');
+            }, 30);
+        }
+
+        function updateKpi1404(idx, val) {
+            appState.kpis1404[idx].value = parseFloat(val) || 0;
+            renderDashboard();
+        }
+
+        function updateRingMetric(idx, val) {
+            appState.ringMetrics[idx].percent = Math.max(0, Math.min(100, parseFloat(val) || 0));
+            renderDashboard();
+        }
+
+        function updateAlertText(idx, val) {
+            appState.alerts[idx].text = val;
+        }
+
+        // -------------------------------------------------------------------------
+        // تب ۲: آمار ده‌ساله (۱۳۹۵ تا ۱۴۰۴) + نمودار منشوری سه‌بعدی ظرفیت و تولید
+        // -------------------------------------------------------------------------
+        function renderDecadeTab(container) {
+            container.innerHTML = `
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <!-- نمودار منشوری سه‌بعدی با ستون شبح ظرفیت (مشابه سمت راست پایین تم‌پلیت) -->
+                    <div class="lg:col-span-6 glass-panel rounded-2xl p-5 flex flex-col">
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <h2 class="text-base font-bold text-white flex items-center gap-2">
+                                    <i data-lucide="bar-chart-2" class="w-5 h-5 text-petro-pink"></i>
+                                    روند ده‌ساله ظرفیت و تولید واقعی (۱۳۹۵ تا ۱۴۰۴)
+                                </h2>
+                                <p class="text-xs text-slate-400">ستون‌های رنگی: تولید واقعی (م.ت) | ستون‌های شیشه‌ای پشتی: ظرفیت اسمی (م.ت)</p>
+                            </div>
+                        </div>
+                        <div id="decade-3d-prisms" class="canvas-container flex-1 min-h-[340px] rounded-xl bg-petro-bg/50 border border-white/5"></div>
+                        <div class="mt-3 flex items-center justify-between text-xs text-slate-400">
+                            <span>میانگین ارزآوری دوران تحریم (۱۳۹۷-۱۴۰۰): ~۱۱ میلیارد دلار</span>
+                            <span>بهره‌وری ۱۴۰۴: ${toFa(appState.decadeData[9].efficiency)}٪</span>
+                        </div>
+                    </div>
+
+                    <!-- ترکیب فروش ۱۴۰۳ و نمودار استوانه‌ای -->
+                    <div class="lg:col-span-6 glass-panel rounded-2xl p-5 flex flex-col justify-between">
+                        <div>
+                            <h2 class="text-base font-bold text-white flex items-center gap-2 mb-1">
+                                <i data-lucide="layers" class="w-5 h-5 text-petro-blue"></i>
+                                ترکیب فروش صنعت پتروشیمی در سال ۱۴۰۳ (رسمی)
+                            </h2>
+                            <p class="text-xs text-slate-400 mb-4">مقایسه حجم (میلیون تن) و ارزش (میلیارد دلار) در کانال‌های صادرات و داخلی</p>
+                        </div>
+                        <div id="salesmix-3d-chart" class="canvas-container min-h-[240px] rounded-xl bg-petro-bg/50 border border-white/5"></div>
+                        <div class="grid grid-cols-2 gap-4 mt-4">
+                            ${appState.salesMix1403.map((item, idx) => `
+                                <div class="p-3.5 rounded-xl bg-petro-bg border border-petro-border">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span class="text-xs font-bold text-white">${item.channel}</span>
+                                        <span class="w-3 h-3 rounded-full" style="background:${item.color}"></span>
+                                    </div>
+                                    <div class="text-sm text-slate-200">حجم: <strong class="text-white">${toFa(item.volume)}</strong> میلیون تن</div>
+                                    <div class="text-sm text-slate-200 mt-0.5">ارزش: <strong class="text-petro-amber">حدود ${toFa(item.value)}</strong> میلیارد دلار</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- جدول کامل آمار ده‌ساله قابل ویرایش -->
+                <div class="glass-panel rounded-2xl p-5 overflow-x-auto">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                        <h3 class="text-base font-bold text-white">جدول جامع سری زمانی ده‌ساله (۱۳۹۵ تا ۱۴۰۴)</h3>
+                        <span class="text-xs text-slate-400">سال‌های «برآورد» درون‌یابی تقریبی بین نقاط رسمی هستند.</span>
+                    </div>
+                    <table class="w-full text-right border-collapse text-xs">
+                        <thead>
+                            <tr class="border-b border-petro-border text-slate-400">
+                                <th class="py-3 px-3">سال</th>
+                                <th class="py-3 px-3">ظرفیت اسمی (م.ت)</th>
+                                <th class="py-3 px-3">تولید واقعی (م.ت)</th>
+                                <th class="py-3 px-3">حجم صادرات (م.ت)</th>
+                                <th class="py-3 px-3">ارزش صادرات (م.د)</th>
+                                <th class="py-3 px-3">بهره‌وری ظرفیت</th>
+                                <th class="py-3 px-3">وضعیت داده</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/5">
+                            ${appState.decadeData.map((row, idx) => `
+                                <tr class="hover:bg-white/5 transition">
+                                    <td class="py-2.5 px-3 font-bold text-white">${row.year}</td>
+                                    <td class="py-2.5 px-3">
+                                        ${appState.editMode ? `<input type="number" step="0.1" value="${row.capacity}" onchange="updateDecadeRow(${idx}, 'capacity', this.value)" class="w-20 px-2 py-1 rounded bg-petro-bg border border-petro-pink text-white">` : toFa(row.capacity)}
+                                    </td>
+                                    <td class="py-2.5 px-3 font-semibold text-petro-cyan">
+                                        ${appState.editMode ? `<input type="number" step="0.1" value="${row.production}" onchange="updateDecadeRow(${idx}, 'production', this.value)" class="w-20 px-2 py-1 rounded bg-petro-bg border border-petro-pink text-white">` : toFa(row.production)}
+                                    </td>
+                                    <td class="py-2.5 px-3">
+                                        ${appState.editMode ? `<input type="number" step="0.1" value="${row.exportVol}" onchange="updateDecadeRow(${idx}, 'exportVol', this.value)" class="w-20 px-2 py-1 rounded bg-petro-bg border border-petro-pink text-white">` : (row.exportVol > 0 ? toFa(row.exportVol) : '<span class="text-slate-500">داده‌ای موجود نیست</span>')}
+                                    </td>
+                                    <td class="py-2.5 px-3 text-petro-amber font-semibold">
+                                        ${appState.editMode ? `<input type="number" step="0.1" value="${row.exportVal}" onchange="updateDecadeRow(${idx}, 'exportVal', this.value)" class="w-20 px-2 py-1 rounded bg-petro-bg border border-petro-pink text-white">` : toFa(row.exportVal)}
+                                    </td>
+                                    <td class="py-2.5 px-3">
+                                        <span class="px-2 py-0.5 rounded bg-white/10 text-white font-bold">${toFa(row.efficiency)}٪</span>
+                                    </td>
+                                    <td class="py-2.5 px-3">
+                                        <span class="px-2 py-0.5 text-[10px] rounded-full ${getBadgeClass(row.status)}">${row.status}</span>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            setTimeout(() => {
+                init3DBarChart('decade-3d-prisms', appState.decadeData.map(d => ({
+                    label: d.year,
+                    value: d.production,
+                    max: d.capacity
+                })), 'prism');
+
+                init3DBarChart('salesmix-3d-chart', [
+                    { label: 'حجم صادرات', value: appState.salesMix1403[0].volume, color: '#ff2a70' },
+                    { label: 'ارزش صادرات', value: appState.salesMix1403[0].value, color: '#9c27b0' },
+                    { label: 'حجم داخلی', value: appState.salesMix1403[1].volume, color: '#ffab00' },
+                    { label: 'ارزش داخلی', value: appState.salesMix1403[1].value, color: '#3d5afe' }
+                ], 'cylinder');
+            }, 30);
+        }
+
+        function updateDecadeRow(idx, field, val) {
+            const num = parseFloat(val) || 0;
+            appState.decadeData[idx][field] = num;
+            if (appState.decadeData[idx].capacity > 0) {
+                appState.decadeData[idx].efficiency = Math.round((appState.decadeData[idx].production / appState.decadeData[idx].capacity) * 100);
+            }
+            renderDashboard();
+        }
+
+        // -------------------------------------------------------------------------
+        // تب ۳: بازار جهانی و اختلاف قیمت (Platts/ICIS در برابر FOB ایران)
+        // -------------------------------------------------------------------------
+        function renderMarketTab(container) {
+            container.innerHTML = `
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <!-- نمودار مقایسه قیمت سه‌بعدی -->
+                    <div class="lg:col-span-6 glass-panel rounded-2xl p-5 flex flex-col">
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <h2 class="text-base font-bold text-white flex items-center gap-2">
+                                    <i data-lucide="dollar-sign" class="w-5 h-5 text-petro-amber"></i>
+                                    مقایسه قیمت صادراتی ایران و مرجع جهانی ($/t)
+                                </h2>
+                                <p class="text-xs text-slate-400">ستون رنگی: قیمت ایران | ستون سایه: قیمت مرجع جهانی (Platts/ICIS)</p>
+                            </div>
+                            <span class="px-2 py-0.5 text-[10px] rounded-full badge-sample">داده‌های نمونه قابل ویرایش</span>
+                        </div>
+                        <div id="market-3d-chart" class="canvas-container flex-1 min-h-[320px] rounded-xl bg-petro-bg/50 border border-white/5"></div>
+                    </div>
+
+                    <!-- جدول محاسبه خودکار شکاف قیمتی -->
+                    <div class="lg:col-span-6 glass-panel rounded-2xl p-5">
+                        <h3 class="text-base font-bold text-white mb-1">جدول اختلاف قیمت محصولات کلیدی</h3>
+                        <p class="text-xs text-slate-400 mb-4">فرمول: اختلاف = (قیمت ایران − مرجع جهانی) ÷ مرجع جهانی × ۱۰۰</p>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-right text-xs">
+                                <thead>
+                                    <tr class="border-b border-petro-border text-slate-400">
+                                        <th class="py-2.5 px-3">محصول</th>
+                                        <th class="py-2.5 px-3">مرجع جهانی ($/t)</th>
+                                        <th class="py-2.5 px-3">قیمت صادراتی ایران ($/t)</th>
+                                        <th class="py-2.5 px-3">اختلاف (٪)</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-white/5">
+                                    ${appState.globalPrices.map((p, idx) => {
+                                        const diff = (((p.iranPrice - p.globalPrice) / p.globalPrice) * 100).toFixed(1);
+                                        return `
+                                            <tr class="hover:bg-white/5">
+                                                <td class="py-3 px-3 font-bold text-white">${p.product}</td>
+                                                <td class="py-3 px-3">
+                                                    ${appState.editMode ? `<input type="number" value="${p.globalPrice}" onchange="updatePrice(${idx}, 'globalPrice', this.value)" class="w-20 px-2 py-1 rounded bg-petro-bg border border-petro-amber text-white">` : toFa(p.globalPrice)}
+                                                </td>
+                                                <td class="py-3 px-3">
+                                                    ${appState.editMode ? `<input type="number" value="${p.iranPrice}" onchange="updatePrice(${idx}, 'iranPrice', this.value)" class="w-20 px-2 py-1 rounded bg-petro-bg border border-petro-pink text-white">` : toFa(p.iranPrice)}
+                                                </td>
+                                                <td class="py-3 px-3 font-bold ${diff < 0 ? 'text-petro-pink' : 'text-emerald-400'}" dir="ltr">
+                                                    ${toFa(diff)}٪
+                                                </td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- عوامل ایجاد شکاف و روندهای جهانی -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="glass-panel rounded-2xl p-5">
+                        <h3 class="text-sm font-bold text-petro-pink mb-3 flex items-center gap-2">
+                            <i data-lucide="git-branch" class="w-4 h-4"></i>
+                            عوامل کلیدی ایجاد شکاف قیمتی
+                        </h3>
+                        <ul class="space-y-2.5 text-xs text-slate-300">
+                            <li class="flex items-start gap-2"><span class="text-petro-pink">•</span> تخفیف‌های تحریمی و هزینه‌های انتقال مالی و واسطه‌ها</li>
+                            <li class="flex items-start gap-2"><span class="text-petro-pink">•</span> افزایش هزینه حمل دریایی، بیمه و حق ریسک جنگ پس از درگیری اخیر</li>
+                            <li class="flex items-start gap-2"><span class="text-petro-pink">•</span> تمرکز بالای خریداران (چین، هند، آسیای جنوب‌شرقی) و محدودیت روش پرداخت</li>
+                            <li class="flex items-start gap-2"><span class="text-petro-pink">•</span> نوسان خوراک زمستانی و توقف‌های ناخواسته تولید در مجتمع‌ها</li>
+                        </ul>
+                    </div>
+                    <div class="glass-panel rounded-2xl p-5">
+                        <h3 class="text-sm font-bold text-petro-cyan mb-3 flex items-center gap-2">
+                            <i data-lucide="compass" class="w-4 h-4"></i>
+                            روندهای راهبردی بازار جهانی
+                        </h3>
+                        <ul class="space-y-2.5 text-xs text-slate-300">
+                            <li class="flex items-start gap-2"><span class="text-petro-cyan">•</span> مازاد ظرفیت پلیمر به‌ویژه در چین و فشار شدید بر حاشیه سود (مارژین)</li>
+                            <li class="flex items-start gap-2"><span class="text-petro-cyan">•</span> حساسیت بالای تقاضای متانول و اوره به قیمت انرژی و فصول کشاورزی</li>
+                            <li class="flex items-start gap-2"><span class="text-petro-cyan">•</span> رقابت سنگین رقبای منطقه‌ای دارای خوراک ارزان و پایدار (عربستان، قطر، امارات)</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+
+            setTimeout(() => {
+                init3DBarChart('market-3d-chart', appState.globalPrices.map(p => ({
+                    label: p.product,
+                    value: p.iranPrice,
+                    max: p.globalPrice
+                })), 'prism');
+            }, 30);
+        }
+
+        function updatePrice(idx, field, val) {
+            appState.globalPrices[idx][field] = parseFloat(val) || 1;
+            renderDashboard();
+        }
+
+        // -------------------------------------------------------------------------
+        // تب ۴: شرایط پس از جنگ ۴۰ روزه (آغاز ۹ اسفند ۱۴۰۴)
+        // -------------------------------------------------------------------------
+        function renderCrisisTab(container) {
+            container.innerHTML = `
+                <!-- کارت‌های شاخص خسارت و بحران -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    ${appState.crisisMetrics.map(item => `
+                        <div class="glass-panel rounded-2xl p-4 border-r-4" style="border-right-color:${item.color}">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs text-slate-400">${item.title}</span>
+                                <span class="px-2 py-0.5 text-[10px] rounded-full badge-estimate">${item.status}</span>
+                            </div>
+                            <div class="text-lg font-extrabold text-white mt-1">${item.value}</div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <!-- خط زمانی بحران و تغییرات ساختاری -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <div class="lg:col-span-6 glass-panel rounded-2xl p-5">
+                        <h3 class="text-base font-bold text-white mb-4 flex items-center gap-2">
+                            <i data-lucide="clock" class="w-5 h-5 text-petro-pink"></i>
+                            خط زمانی جنگ ۴۰ روزه و اقدامات بازسازی
+                        </h3>
+                        <div class="relative border-r-2 border-petro-pink/40 pr-5 space-y-5 mr-2">
+                            ${appState.crisisTimeline.map(step => `
+                                <div class="relative">
+                                    <span class="absolute -right-[27px] top-1 w-3.5 h-3.5 rounded-full bg-petro-pink border-2 border-petro-bg"></span>
+                                    <span class="text-[11px] font-bold text-petro-amber">${step.date}</span>
+                                    <h4 class="text-sm font-bold text-white mt-0.5">${step.title}</h4>
+                                    <p class="text-xs text-slate-300 mt-1 leading-relaxed">${step.desc}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-6 glass-panel rounded-2xl p-5 space-y-4">
+                        <h3 class="text-base font-bold text-white flex items-center gap-2">
+                            <i data-lucide="factory" class="w-5 h-5 text-petro-amber"></i>
+                            تغییرات ساختاری و گلوگاه‌های یوتیلیتی
+                        </h3>
+                        <div class="p-4 rounded-xl bg-rose-950/25 border border-petro-pink/40">
+                            <h4 class="text-xs font-bold text-rose-200 mb-1">ریسک تغییر تراز محصولات</h4>
+                            <p class="text-xs text-slate-300">احتمال تبدیل ایران از صادرکننده به واردکننده بالقوه در برخی گریدها و محصولات واسطه‌ای تا زمان تکمیل بازسازی.</p>
+                        </div>
+                        <div class="p-4 rounded-xl bg-petro-bg border border-petro-border">
+                            <h4 class="text-xs font-bold text-petro-cyan mb-2">مجتمع‌های وابسته به مرکز آسیب‌دیده فجر (ماهشهر)</h4>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="px-3 py-1 rounded-lg bg-petro-card text-xs text-white border border-white/10">پتروشیمی بوعلی‌سینا</span>
+                                <span class="px-3 py-1 rounded-lg bg-petro-card text-xs text-white border border-white/10">پتروشیمی مارون</span>
+                                <span class="px-3 py-1 rounded-lg bg-petro-card text-xs text-white border border-white/10">پتروشیمی اروند</span>
+                                <span class="px-3 py-1 rounded-lg bg-petro-card text-xs text-white border border-white/10">پتروشیمی فن‌آوران</span>
+                            </div>
+                            <p class="text-xs text-slate-400 mt-3">پتروشیمی رازی: با کمبود برق مواجه بوده و نیازمند واردات حدود ۱۲ مگاوات از شبکه سراسری است.</p>
+                        </div>
+                        <div class="p-3.5 rounded-xl bg-amber-950/20 border border-petro-amber/30 text-xs text-amber-200">
+                            برآورد فعالان صنعت: خسارت واقعی (شامل عدم‌النفع توقف تولید، بیمه، حمل و تأخیر پروژه‌ها) بسیار فراتر از خسارت فیزیکی مستقیم است.
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // -------------------------------------------------------------------------
+        // تب ۵: بالادست، تأمین خوراک و تراز تجاری
+        // -------------------------------------------------------------------------
+        function renderUpstreamTab(container) {
+            container.innerHTML = `
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <!-- ماتریس وضعیت رصد خوراک و یوتیلیتی (تعاملی) -->
+                    <div class="lg:col-span-5 glass-panel rounded-2xl p-5">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-base font-bold text-white flex items-center gap-2">
+                                <i data-lucide="activity" class="w-5 h-5 text-petro-pink"></i>
+                                وضعیت لحظه‌ای خوراک و یوتیلیتی
+                            </h2>
+                            <span class="text-[11px] text-slate-400">برای تغییر وضعیت کلیک کنید</span>
+                        </div>
+                        <div class="space-y-3">
+                            ${appState.feedstockChecklist.map((item, idx) => {
+                                const stateStyles = {
+                                    'پایدار': 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+                                    'در حال رصد': 'bg-petro-amber/20 text-amber-300 border-petro-amber/40',
+                                    'بحرانی': 'bg-petro-pink/20 text-rose-300 border-petro-pink/40'
+                                };
+                                return `
+                                    <div class="flex items-center justify-between p-3 rounded-xl bg-petro-bg border border-petro-border">
+                                        <span class="text-xs font-medium text-slate-200">${item.label}</span>
+                                        <button onclick="cycleFeedstockState(${idx})" class="px-3 py-1 rounded-lg border text-xs font-bold transition ${stateStyles[item.state]}">
+                                            ${item.state}
+                                        </button>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+
+                        <div class="mt-5 pt-4 border-t border-white/10 space-y-2 text-xs text-slate-300">
+                            <div class="font-bold text-white">نکات کلیدی بالادست (۱۴۰۴):</div>
+                            <p>• جمع‌آوری گازهای مشعل: افزودن ~۱۰ میلیون مترمکعب در روز به سبد خوراک.</p>
+                            <p>• از ۱۵ طرح جدید ۱۴۰۴ (۶ میلیارد دلار، ~۸ م.ت ظرفیت) تنها یک طرح گاز-محور است.</p>
+                        </div>
+                    </div>
+
+                    <!-- نمودار سه‌بعدی صادرات، واردات و تراز تجاری -->
+                    <div class="lg:col-span-7 glass-panel rounded-2xl p-5 flex flex-col">
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <h2 class="text-base font-bold text-white flex items-center gap-2">
+                                    <i data-lucide="scale" class="w-5 h-5 text-petro-cyan"></i>
+                                    تراز تجاری ۱۰ ساله پتروشیمی (میلیارد دلار)
+                                </h2>
+                                <p class="text-xs text-slate-400">مقایسه صادرات رسمی و واردات برآوردی (قابل ویرایش در حالت ویرایش)</p>
+                            </div>
+                        </div>
+                        <div id="trade-3d-chart" class="canvas-container min-h-[260px] rounded-xl bg-petro-bg/50 border border-white/5 mb-4"></div>
+                        <div class="overflow-x-auto max-h-56">
+                            <table class="w-full text-right text-xs">
+                                <thead class="sticky top-0 bg-petro-card text-slate-400 border-b border-petro-border">
+                                    <tr>
+                                        <th class="py-2 px-2">سال</th>
+                                        <th class="py-2 px-2">صادرات (م.د)</th>
+                                        <th class="py-2 px-2">واردات (م.د)</th>
+                                        <th class="py-2 px-2">تراز تجاری (م.د)</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-white/5">
+                                    ${appState.tradeBalance.map((t, idx) => {
+                                        const bal = (t.exportVal - t.importVal).toFixed(1);
+                                        return `
+                                            <tr>
+                                                <td class="py-2 px-2 font-bold text-white">${t.year}</td>
+                                                <td class="py-2 px-2 text-petro-cyan">${toFa(t.exportVal)}</td>
+                                                <td class="py-2 px-2">
+                                                    ${appState.editMode ? `<input type="number" step="0.1" value="${t.importVal}" onchange="updateTradeImport(${idx}, this.value)" class="w-16 px-1.5 py-0.5 rounded bg-petro-bg border border-petro-pink text-white">` : toFa(t.importVal)}
+                                                </td>
+                                                <td class="py-2 px-2 font-bold text-emerald-400">+${toFa(bal)}</td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            setTimeout(() => {
+                init3DBarChart('trade-3d-chart', appState.tradeBalance.map(t => ({
+                    label: t.year,
+                    value: +(t.exportVal - t.importVal).toFixed(1),
+                    max: t.exportVal
+                })), 'prism');
+            }, 30);
+        }
+
+        function cycleFeedstockState(idx) {
+            const states = ['پایدار', 'در حال رصد', 'بحرانی'];
+            const current = appState.feedstockChecklist[idx].state;
+            const next = states[(states.indexOf(current) + 1) % states.length];
+            appState.feedstockChecklist[idx].state = next;
+            renderDashboard();
+        }
+
+        function updateTradeImport(idx, val) {
+            appState.tradeBalance[idx].importVal = parseFloat(val) || 0;
+            renderDashboard();
+        }
+
+        // -------------------------------------------------------------------------
+        // تب ۶: آینده صنعت (برنامه هفتم) و جدول رصد ماهانه هوشمند
+        // -------------------------------------------------------------------------
+        function renderFutureTab(container) {
+            container.innerHTML = `
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <!-- چشم‌انداز ظرفیت تا ۱۴۰۷ -->
+                    <div class="lg:col-span-6 glass-panel rounded-2xl p-5 flex flex-col">
+                        <h2 class="text-base font-bold text-white flex items-center gap-2 mb-1">
+                            <i data-lucide="rocket" class="w-5 h-5 text-petro-purple"></i>
+                            چشم‌انداز ظرفیت تا پایان برنامه هفتم (۱۴۰۴ تا ۱۴۰۷)
+                        </h2>
+                        <p class="text-xs text-slate-400 mb-3">ستون رنگی: سناریوی بازیابی کند | ستون سایه: هدف رسمی ظرفیت (م.ت)</p>
+                        <div id="future-3d-chart" class="canvas-container flex-1 min-h-[280px] rounded-xl bg-petro-bg/50 border border-white/5"></div>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4">
+                            ${appState.futureProjection.map((f, idx) => `
+                                <div class="p-2.5 rounded-xl bg-petro-bg border border-petro-border text-center">
+                                    <div class="text-[11px] font-bold text-petro-amber">${f.year}</div>
+                                    <div class="text-xs text-slate-300 mt-1">هدف: <strong class="text-white">${toFa(f.officialTarget)}</strong></div>
+                                    <div class="text-xs text-slate-400">
+                                        کند: ${appState.editMode ? `<input type="number" value="${f.slowScenario}" onchange="updateFutureSlow(${idx}, this.value)" class="w-14 px-1 rounded bg-petro-card border border-petro-pink text-white text-center">` : `<strong class="text-petro-pink">${toFa(f.slowScenario)}</strong>`}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <!-- جدول رصد ماهانه با محاسبه خودکار هشدار افت تولید -->
+                    <div class="lg:col-span-6 glass-panel rounded-2xl p-5 flex flex-col justify-between">
+                        <div>
+                            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                                <div>
+                                    <h2 class="text-base font-bold text-white flex items-center gap-2">
+                                        <i data-lucide="calendar" class="w-5 h-5 text-petro-cyan"></i>
+                                        سامانه رصد ماهانه تولید و صادرات
+                                    </h2>
+                                    <p class="text-xs text-slate-400">محاسبه خودکار تغییر ماهانه و صدور هشدار در صورت افت بیش از آستانه</p>
+                                </div>
+                                <div class="flex items-center gap-2 bg-petro-bg px-3 py-1.5 rounded-xl border border-petro-border text-xs">
+                                    <span class="text-slate-400">آستانه هشدار افت:</span>
+                                    <input type="number" value="${appState.monthlyAlertThreshold}" onchange="updateThreshold(this.value)" class="w-12 bg-petro-card border border-petro-amber rounded px-1.5 py-0.5 text-center text-white font-bold">
+                                    <span class="text-petro-amber">٪</span>
+                                </div>
+                            </div>
+
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-right text-xs">
+                                    <thead>
+                                        <tr class="border-b border-petro-border text-slate-400">
+                                            <th class="py-2.5 px-2">ماه</th>
+                                            <th class="py-2.5 px-2">تولید (م.ت)</th>
+                                            <th class="py-2.5 px-2">صادرات (م.ت)</th>
+                                            <th class="py-2.5 px-2">ارزش (م.د)</th>
+                                            <th class="py-2.5 px-2">تغییر تولید</th>
+                                            <th class="py-2.5 px-2">وضعیت هشدار</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-white/5">
+                                        ${appState.monthlyMonitoring.map((m, idx) => {
+                                            let changePct = 0;
+                                            let hasPrev = idx > 0;
+                                            if (hasPrev) {
+                                                const prev = appState.monthlyMonitoring[idx - 1].prod;
+                                                changePct = prev > 0 ? (((m.prod - prev) / prev) * 100).toFixed(1) : 0;
+                                            }
+                                            const isAlert = hasPrev && parseFloat(changePct) <= -Math.abs(appState.monthlyAlertThreshold);
+                                            return `
+                                                <tr>
+                                                    <td class="py-2.5 px-2 font-bold text-white">
+                                                        ${appState.editMode ? `<input type="text" value="${m.month}" onchange="updateMonthlyRow(${idx}, 'month', this.value)" class="w-24 px-1.5 py-0.5 rounded bg-petro-bg border border-petro-border text-white">` : m.month}
+                                                    </td>
+                                                    <td class="py-2.5 px-2">
+                                                        ${appState.editMode ? `<input type="number" step="0.1" value="${m.prod}" onchange="updateMonthlyRow(${idx}, 'prod', this.value)" class="w-16 px-1.5 py-0.5 rounded bg-petro-bg border border-petro-pink text-white">` : toFa(m.prod)}
+                                                    </td>
+                                                    <td class="py-2.5 px-2">
+                                                        ${appState.editMode ? `<input type="number" step="0.1" value="${m.expVol}" onchange="updateMonthlyRow(${idx}, 'expVol', this.value)" class="w-16 px-1.5 py-0.5 rounded bg-petro-bg border border-petro-border text-white">` : toFa(m.expVol)}
+                                                    </td>
+                                                    <td class="py-2.5 px-2">
+                                                        ${appState.editMode ? `<input type="number" step="0.01" value="${m.expVal}" onchange="updateMonthlyRow(${idx}, 'expVal', this.value)" class="w-16 px-1.5 py-0.5 rounded bg-petro-bg border border-petro-border text-white">` : toFa(m.expVal)}
+                                                    </td>
+                                                    <td class="py-2.5 px-2 font-bold ${!hasPrev ? 'text-slate-500' : (changePct >= 0 ? 'text-emerald-400' : 'text-petro-pink')}" dir="ltr">
+                                                        ${hasPrev ? `${changePct > 0 ? '+' : ''}${toFa(changePct)}٪` : 'پایه'}
+                                                    </td>
+                                                    <td class="py-2.5 px-2">
+                                                        ${isAlert
+                                                            ? '<span class="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40 font-bold">🔴 هشدار افت</span>'
+                                                            : '<span class="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300">🟢 عادی</span>'
+                                                        }
+                                                    </td>
+                                                </tr>
+                                            `;
+                                        }).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 pt-3 border-t border-white/10 flex justify-end">
+                            <button onclick="addMonthlyRow()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-petro-cyan/20 hover:bg-petro-cyan/30 text-petro-cyan text-xs font-semibold transition">
+                                <i data-lucide="plus" class="w-4 h-4"></i>
+                                <span>افزودن ردیف ماه جدید</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            setTimeout(() => {
+                init3DBarChart('future-3d-chart', appState.futureProjection.map(f => ({
+                    label: f.year,
+                    value: f.slowScenario,
+                    max: f.officialTarget
+                })), 'prism');
+            }, 30);
+        }
+
+        function updateFutureSlow(idx, val) {
+            appState.futureProjection[idx].slowScenario = parseFloat(val) || 0;
+            renderDashboard();
+        }
+
+        function updateThreshold(val) {
+            appState.monthlyAlertThreshold = parseFloat(val) || 15;
+            renderDashboard();
+        }
+
+        function updateMonthlyRow(idx, field, val) {
+            appState.monthlyMonitoring[idx][field] = field === 'month' ? val : (parseFloat(val) || 0);
+            renderDashboard();
+        }
+
+        function addMonthlyRow() {
+            const last = appState.monthlyMonitoring[appState.monthlyMonitoring.length - 1];
+            appState.monthlyMonitoring.push({
+                id: 'm-' + Date.now(),
+                month: 'ماه جدید ۱۴۰۵',
+                prod: last ? +(last.prod * 0.8).toFixed(1) : 5.0,
+                expVol: 2.0,
+                expVal: 0.9
+            });
+            renderDashboard();
+            showToast('ردیف ماه جدید اضافه شد. در حالت ویرایش مقادیر را تنظیم کنید.', 'info');
+        }
+
+        // -------------------------------------------------------------------------
+        // تب‌های سفارشی ایجادشده توسط کاربر
+        // -------------------------------------------------------------------------
+        function renderCustomTab(container, tabId) {
+            const data = appState.customTabsData[tabId];
+            if (data.type === 'custom-chart') {
+                container.innerHTML = `
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        <div class="lg:col-span-7 glass-panel rounded-2xl p-5 flex flex-col">
+                            <h2 class="text-base font-bold text-white mb-1">${data.title} (نمودار سه‌بعدی اختصاصی)</h2>
+                            <p class="text-xs text-slate-400 mb-3">حالت ویرایش را فعال کنید تا نام و مقدار ستون‌های سه‌بعدی را تغییر دهید.</p>
+                            <div id="custom-3d-canvas" class="canvas-container flex-1 min-h-[320px] rounded-xl bg-petro-bg/50 border border-white/5"></div>
+                        </div>
+                        <div class="lg:col-span-5 glass-panel rounded-2xl p-5 space-y-4">
+                            <h3 class="text-base font-bold text-white">تنظیم داده‌های نمودار سه‌بعدی</h3>
+                            <div class="space-y-3">
+                                ${data.bars.map((b, idx) => `
+                                    <div class="p-3 rounded-xl bg-petro-bg border border-petro-border flex items-center justify-between gap-3">
+                                        ${appState.editMode ? `
+                                            <input type="text" value="${b.label}" onchange="updateCustomBar('${tabId}', ${idx}, 'label', this.value)" class="w-1/2 px-2 py-1 rounded bg-petro-card border border-petro-border text-xs text-white">
+                                            <input type="number" value="${b.value}" onchange="updateCustomBar('${tabId}', ${idx}, 'value', this.value)" class="w-24 px-2 py-1 rounded bg-petro-card border border-petro-pink text-xs text-white">
+                                        ` : `
+                                            <span class="text-xs font-bold text-white">${b.label}</span>
+                                            <span class="text-sm font-extrabold" style="color:${b.color}">${toFa(b.value)}</span>
+                                        `}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                setTimeout(() => {
+                    init3DBarChart('custom-3d-canvas', data.bars.map(b => ({
+                        label: b.label,
+                        value: b.value,
+                        color: b.color
+                    })), 'cylinder');
+                }, 30);
+            } else {
+                container.innerHTML = `
+                    <div class="glass-panel rounded-2xl p-6 space-y-4">
+                        <h2 class="text-lg font-bold text-white">${data.title}</h2>
+                        ${appState.editMode ? `
+                            <textarea rows="8" onchange="appState.customTabsData['${tabId}'].notes = this.value"
+                                class="w-full p-4 rounded-xl bg-petro-bg border border-petro-pink text-sm text-white leading-relaxed">${data.notes}</textarea>
+                        ` : `
+                            <p class="text-sm text-slate-300 leading-loose whitespace-pre-line">${data.notes}</p>
+                        `}
+                    </div>
+                `;
+            }
+        }
+
+        function updateCustomBar(tabId, idx, field, val) {
+            appState.customTabsData[tabId].bars[idx][field] = field === 'label' ? val : (parseFloat(val) || 0);
+            renderDashboard();
+        }
+
+        // =========================================================================
+        // ۷. راه‌اندازی اولیه و واکنش‌گرایی هنگام تغییر اندازه پنجره
+        // =========================================================================
+        window.addEventListener('resize', () => {
+            clearTimeout(window.__resizeTimer);
+            window.__resizeTimer = setTimeout(() => {
+                renderDashboard();
+            }, 250);
+        });
+
+        window.onload = function () {
+            renderTabs();
+            renderCustomButtons();
+            renderDashboard();
+        };
+    </script>
+</body>
+</html>
